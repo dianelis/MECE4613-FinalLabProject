@@ -24,6 +24,7 @@ The project is built on a **Raspberry Pi 4B** running Debian Bullseye (64-bit) a
 | `hmi_stream.py` | Tornado-based MJPEG streaming server for the robot's camera feed |
 | `file_watcher.py` | Utility class that detects file-modification events via `mtime` polling |
 | `qr_code.py` | QR code detection and decoding using OpenCV's `QRCodeDetector` |
+| `part_b.py` | **Part B solution** — integrated travel + QR detection + LED blink + return |
 | `qr_stream.py` | Real-time QR code scanning on the camera stream |
 | `am3469.png` | Sample personal QR code (UNI-based) |
 | `Guide-Rev0.pdf` | Setup guide for the robot OS, camera, QR codes, and HMI streaming |
