@@ -45,8 +45,10 @@ robot_stream*.jpg
 # AI agent configurations
 # ===========================
 # These are local development tool configs — not project code
+.claude/
 .codex/
 .cursor/
+.entire/
 .factory/
 .gemini/
 .github/hooks/
