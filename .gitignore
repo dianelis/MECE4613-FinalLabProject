@@ -1,0 +1,54 @@
+# ===========================
+# Python
+# ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ===========================
+# OS files
+# ===========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ===========================
+# IDE / Editor
+# ===========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ===========================
+# Raspberry Pi / OpenCV
+# ===========================
+# Captured photos and stream frames (runtime artifacts)
+photo_*.jpg
+robot_stream*.jpg
+
+# ===========================
+# AI agent configurations
+# ===========================
+# These are local development tool configs — not project code
+.codex/
+.cursor/
+.factory/
+.gemini/
+.github/hooks/
+.github/copilot*
+.opencode/
