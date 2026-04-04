@@ -40,6 +40,8 @@ def set_throttle(motor_name, speed, factor=1):
             sync = SyncBackwardR
     else:
         sync = 1.0
+    if motor_name == 'R':
+        factor = -factor
     MOTOR[motor_name].throttle = THROTTLE_SPEED[speed] * sync * factor
  
 
@@ -63,8 +65,8 @@ def move(duration=0.3, speed=2, factor_r=1, factor_l=1):
 # expand move() to define forward, backward, right, left, spin_right and spin_left functions
 forward = partial(move)
 backward = partial(move, factor_r=-1, factor_l=-1)
-right = partial(move, factor_r=0.5)
-left = partial(move, factor_l=0.5)
-spin_right = partial(move, factor_r=-1, factor_l=1)
-spin_left = partial(move, factor_r=1, factor_l=-1)
+right = partial(move, factor_l=0.5)
+left = partial(move, factor_r=0.5)
+spin_right = partial(move, factor_r=1, factor_l=-1)
+spin_left = partial(move, factor_r=-1, factor_l=1)
 noop = lambda: None
