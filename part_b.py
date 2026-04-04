@@ -26,6 +26,7 @@ Usage (on the Raspberry Pi):
 
 # ─── Imports ──────────────────────────────────────────────────────────
 from adafruit_crickit import crickit as ck
+from picamera2 import Picamera2
 from qr_code import decode_qrcode
 import motor
 import cv2
@@ -57,19 +58,20 @@ led = ck.drive_1
 
 # ─── Camera ───────────────────────────────────────────────────────────
 def init_camera():
-    """Open and configure the Pi camera."""
-    cap = cv2.VideoCapture(0)
-    assert cap.isOpened(), 'Error: could not open camera.'
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,  WIDTH)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
-    cap.set(cv2.CAP_PROP_FPS,          FPS)
-    return cap
+    """Open and configure the Pi camera via libcamera."""
+    picam2 = Picamera2()
+    config = picam2.create_preview_configuration(
+        main={"size": (WIDTH, HEIGHT), "format": "RGB888"}
+    )
+    picam2.configure(config)
+    picam2.start()
+    return picam2
 
 
-def grab_frame(cap):
+def grab_frame(picam2):
     """Capture one frame, flip it (camera is mounted upside-down), return it."""
-    ret, frame = cap.read()
-    if not ret:
+    frame = picam2.capture_array()
+    if frame is None:
         return None
     return cv2.flip(frame, -1)
 
@@ -171,7 +173,7 @@ def main():
     stop()
 
     # ── Cleanup ─────────────────────────────────────────────────────
-    cap.release()
+    cap.stop()
     led_off()
 
     print('\n' + '=' * 50)
