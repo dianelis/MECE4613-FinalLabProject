@@ -1,325 +1,407 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Robot HMI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="data:,">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<title>Robot HMI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-  :root {
-    --bg:         #09090b;
-    --bg-card:    #18181b;
-    --border:     #27272a;
-    --fg:         #fafafa;
-    --fg-muted:   #a1a1aa;
-    --accent:     #2563eb;
-    --accent-fg:  #ffffff;
-    --ring:       #3b82f6;
-    --destructive:#dc2626;
-    --radius:     0.625rem;
-  }
+:root {
+  --bg:        #09090b;
+  --bg-card:   #18181b;
+  --border:    #27272a;
+  --fg:        #fafafa;
+  --fg-muted:  #a1a1aa;
+  --accent:    #2563eb;
+  --green:     #22c55e;
+  --yellow:    #eab308;
+  --red:       #dc2626;
+  --radius:    0.625rem;
+}
 
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--fg);
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-  }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100dvh;
+}
 
-  /* ── Header ──────────────────────────────────── */
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  header .title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  header .title svg { color: var(--fg-muted); }
-  header h1 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-  header .badge {
-    font-size: 0.65rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    background: rgba(34,197,94,0.12);
-    color: #4ade80;
-    border: 1px solid rgba(34,197,94,0.2);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .stamp {
-    font-size: 0.75rem;
-    color: var(--fg-muted);
-    font-variant-numeric: tabular-nums;
-  }
+/* ── Header ───────────────────────────────── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+header .title { display:flex; align-items:center; gap:10px; }
+header h1 { font-size:0.95rem; font-weight:600; letter-spacing:-0.01em; }
+header .badge {
+  font-size:0.65rem; font-weight:600; padding:2px 8px;
+  border-radius:9999px; text-transform:uppercase; letter-spacing:0.04em;
+}
+.badge-online { background:rgba(34,197,94,0.12); color:#4ade80; border:1px solid rgba(34,197,94,0.2); }
+.badge-running { background:rgba(37,99,235,0.15); color:#60a5fa; border:1px solid rgba(37,99,235,0.25); animation: pulse 1.5s infinite; }
+.stamp { font-size:0.72rem; color:var(--fg-muted); font-variant-numeric:tabular-nums; }
 
-  /* ── Main ────────────────────────────────────── */
-  main {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) + 4px);
-    padding: 32px;
-    width: 100%;
-    max-width: 380px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  }
-  .card-header {
-    margin-bottom: 8px;
-  }
-  .card-header h2 {
-    font-size: 1.05rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-  .card-header p {
-    font-size: 0.8rem;
-    color: var(--fg-muted);
-    margin-top: 4px;
-    line-height: 1.4;
-  }
-  .separator {
-    height: 1px;
-    background: var(--border);
-    margin: 20px 0;
-  }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
 
-  /* ── Control Pad ─────────────────────────────── */
-  form { display: contents; }
-  .control-section {
-    margin-bottom: 20px;
-  }
-  .control-section:last-child {
-    margin-bottom: 0;
-  }
-  .section-label {
-    font-size: 0.7rem;
-    font-weight: 500;
-    color: var(--fg-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 10px;
-  }
+/* ── Layout ───────────────────────────────── */
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+}
+@media (max-width: 780px) {
+  .container { grid-template-columns: 1fr; }
+}
 
-  .btn-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-  }
+/* ── Card ─────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+.card-body { padding: 20px; }
+.card-title {
+  font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;
+}
+.card-desc {
+  font-size: 0.75rem; color: var(--fg-muted); line-height: 1.4; margin-bottom: 16px;
+}
+.separator {
+  height: 1px; background: var(--border); margin: 16px 0;
+}
+.section-label {
+  font-size: 0.65rem; font-weight: 500; color: var(--fg-muted);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+}
 
-  button {
-    font-family: inherit;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg);
-    color: var(--fg);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
-    position: relative;
-  }
-  button:hover {
-    background: #27272a;
-    border-color: #3f3f46;
-  }
-  button:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
-  button:active {
-    transform: scale(0.95);
-    background: #3f3f46;
-  }
-  button svg {
-    pointer-events: none;
-  }
+/* ── Camera Feed ──────────────────────────── */
+.feed-wrapper { position: relative; background: #000; }
+.feed-wrapper img { display:block; width:100%; height:auto; }
+.feed-label {
+  position:absolute; top:10px; left:12px;
+  background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+  padding:4px 10px; border-radius:6px;
+  font-size:0.7rem; color:var(--fg-muted);
+  letter-spacing:0.05em; text-transform:uppercase;
+}
+#toast {
+  position:absolute; bottom:14px; left:50%;
+  transform:translateX(-50%) translateY(60px);
+  padding:10px 24px; border-radius:8px;
+  font-size:0.85rem; font-weight:600;
+  opacity:0; transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events:none; white-space:nowrap; z-index:10;
+}
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+#toast.match { background:rgba(34,197,94,0.9); color:#fff; box-shadow:0 0 24px rgba(34,197,94,0.35); }
+#toast.skip { background:rgba(234,179,8,0.85); color:#1a1a1a; }
 
-  .btn-dir {
-    width: 72px;
-    height: 72px;
-  }
-  .btn-dir svg {
-    width: 28px;
-    height: 28px;
-    color: var(--fg);
-  }
+/* ── Part B Status Bar ────────────────────── */
+#partb-bar {
+  padding: 10px 16px;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  min-height: 38px;
+  color: var(--fg-muted);
+}
+#partb-bar .indicator {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.ind-idle { background: #52525b; }
+.ind-phase1 { background: var(--green); animation: pulse 1s infinite; }
+.ind-phase2 { background: var(--yellow); animation: pulse 1s infinite; }
+.ind-detected { background: var(--accent); animation: pulse 0.4s infinite; }
 
-  .btn-spin {
-    width: 72px;
-    height: 72px;
-  }
-  .btn-spin svg {
-    width: 24px;
-    height: 24px;
-    color: var(--fg-muted);
-  }
-  .btn-spin:hover svg {
-    color: var(--fg);
-  }
+/* ── Buttons ──────────────────────────────── */
+button {
+  font-family: inherit;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); color: var(--fg);
+  cursor: pointer; transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+button:hover { background:#27272a; border-color:#3f3f46; }
+button:focus-visible { outline:2px solid #3b82f6; outline-offset:2px; }
+button:active { transform:scale(0.95); background:#3f3f46; }
+button:disabled { opacity:0.4; pointer-events:none; }
 
-  .btn-stop {
-    width: 100%;
-    height: 44px;
-    background: rgba(220,38,38,0.08);
-    border-color: rgba(220,38,38,0.25);
-    color: #f87171;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    gap: 8px;
-  }
-  .btn-stop:hover {
-    background: rgba(220,38,38,0.15);
-    border-color: rgba(220,38,38,0.4);
-    color: #fca5a5;
-  }
-  .btn-stop svg {
-    width: 16px;
-    height: 16px;
-  }
+.btn-row { display:flex; justify-content:center; gap:8px; }
 
-  .btn-label {
-    position: absolute;
-    bottom: -18px;
-    font-size: 0.6rem;
-    color: var(--fg-muted);
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  button:hover .btn-label {
-    opacity: 1;
-  }
+.btn-dir { width:64px; height:64px; }
+.btn-dir svg { width:24px; height:24px; }
 
-  /* ── Footer ──────────────────────────────────── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 12px 24px;
-    text-align: center;
-    font-size: 0.7rem;
-    color: #52525b;
-  }
+.btn-spin { width:64px; height:64px; }
+.btn-spin svg { width:20px; height:20px; color:var(--fg-muted); }
+.btn-spin:hover svg { color:var(--fg); }
 
-  /* ── Active animation ────────────────────────── */
-  @keyframes ping {
-    0%   { box-shadow: 0 0 0 0 rgba(37,99,235,0.5); }
-    100% { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
-  }
-  button:active {
-    animation: ping 0.4s ease-out;
-  }
+.btn-stop {
+  width:100%; height:40px;
+  background:rgba(220,38,38,0.08); border-color:rgba(220,38,38,0.25);
+  color:#f87171; font-size:0.78rem; font-weight:600; gap:6px;
+  letter-spacing:0.03em;
+}
+.btn-stop:hover { background:rgba(220,38,38,0.15); border-color:rgba(220,38,38,0.4); color:#fca5a5; }
+.btn-stop svg { width:14px; height:14px; }
 
-  /* ── Responsive ──────────────────────────────── */
-  @media (max-width: 420px) {
-    .card { padding: 24px 20px; }
-    .btn-dir, .btn-spin { width: 64px; height: 64px; }
-  }
+.btn-partb {
+  width:100%; height:44px; font-size:0.82rem; font-weight:600;
+  gap:8px; letter-spacing:0.02em;
+}
+.btn-start {
+  background:rgba(34,197,94,0.1); border-color:rgba(34,197,94,0.3);
+  color:#4ade80;
+}
+.btn-start:hover { background:rgba(34,197,94,0.18); border-color:rgba(34,197,94,0.45); }
+.btn-abort {
+  background:rgba(220,38,38,0.1); border-color:rgba(220,38,38,0.3);
+  color:#f87171;
+}
+.btn-abort:hover { background:rgba(220,38,38,0.18); border-color:rgba(220,38,38,0.4); }
+
+/* ── Detection Log ────────────────────────── */
+#log {
+  max-height: 220px;
+  overflow-y: auto;
+}
+#log:empty::after {
+  content: "No QR codes detected yet";
+  display:block; padding:16px; text-align:center;
+  color:#52525b; font-size:0.78rem;
+}
+.log-entry {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; border-radius:6px; font-size:0.78rem;
+  animation: slideIn 0.3s ease;
+}
+.log-entry + .log-entry { margin-top:2px; }
+.log-entry.match { background:rgba(34,197,94,0.08); border-left:3px solid var(--green); }
+.log-entry.skip  { background:rgba(234,179,8,0.06); border-left:3px solid var(--yellow); }
+.log-entry .lbl {
+  font-size:0.62rem; font-weight:700; padding:2px 6px; border-radius:3px;
+  text-transform:uppercase; letter-spacing:0.04em; flex-shrink:0;
+}
+.match .lbl { background:var(--green); color:#fff; }
+.skip  .lbl { background:var(--yellow); color:#1a1a1a; }
+.log-entry .code { font-family:monospace; font-weight:600; }
+.log-entry .ts { color:#52525b; margin-left:auto; font-size:0.68rem; }
+@keyframes slideIn { from{opacity:0;transform:translateY(-6px);} to{opacity:1;transform:translateY(0);} }
+
+/* ── Footer ───────────────────────────────── */
+footer {
+  border-top:1px solid var(--border); padding:12px 24px;
+  text-align:center; font-size:0.68rem; color:#52525b;
+}
+
+/* ── Responsive ───────────────────────────── */
+@media (max-width: 420px) {
+  .btn-dir, .btn-spin { width:56px; height:56px; }
+  .card-body { padding:16px; }
+}
 </style>
 </head>
 <body>
 
 <header>
   <div class="title">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" x2="8" y1="16" y2="16"/><line x1="16" x2="16" y1="16" y2="16"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" x2="8" y1="16" y2="16"/><line x1="16" x2="16" y1="16" y2="16"/></svg>
     <h1>Robot HMI</h1>
-    <span class="badge">Online</span>
+    <span id="status-badge" class="badge badge-online">Online</span>
   </div>
-  <span class="stamp">{{ stamp }}</span>
+  <span class="stamp">{% raw stamp %}</span>
 </header>
 
-<main>
-  <div class="card">
-    <div class="card-header">
-      <h2>Movement Control</h2>
-      <p>Use the controls below to drive the robot. Each press moves for 0.3 seconds.</p>
+<div class="container">
+
+  <!-- ── Left: Camera + Part B ─────────────── -->
+  <div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="feed-wrapper">
+        <span class="feed-label">Live Feed</span>
+        <img id="feed" src="/stream" alt="Camera feed">
+        <div id="toast"></div>
+      </div>
+      <div id="partb-bar">
+        <span class="indicator ind-idle" id="partb-ind"></span>
+        <span id="partb-msg">Part B idle — ready to start</span>
+      </div>
     </div>
 
-    <div class="separator"></div>
-
-    <form method="post">
-
-      <div class="control-section">
-        <div class="section-label">Direction</div>
-        <div class="btn-row" style="margin-bottom:10px">
-          <button class="btn-dir" formaction="forward" title="Forward">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m5 12 7-7 7 7"/></svg>
-            <span class="btn-label">Forward</span>
-          </button>
-          <button class="btn-dir" formaction="backward" title="Backward">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-            <span class="btn-label">Backward</span>
-          </button>
+    <div class="card">
+      <div class="card-body">
+        <div class="card-title">Part B — Dynamic Object Detection</div>
+        <div class="card-desc">
+          Robot drives forward for {{ TRAVEL_DURATION }}s scanning for QR code
+          <strong>{{ my_uni }}</strong>. On detection: stop, blink LED 3s, resume.
+          Then returns to start.
         </div>
-        <div class="btn-row">
-          <button class="btn-dir" formaction="left" title="Left">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5-7 7 7 7"/></svg>
-            <span class="btn-label">Left</span>
+        <div style="display:flex; gap:10px">
+          <button class="btn-partb btn-start" id="btn-start" onclick="startPartB()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,4 20,12 6,20"/></svg>
+            Start Part B
           </button>
-          <button class="btn-dir" formaction="right" title="Right">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 19 7-7-7-7"/></svg>
-            <span class="btn-label">Right</span>
+          <button class="btn-partb btn-abort" id="btn-abort" onclick="stopPartB()" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="5" y="5" rx="2"/></svg>
+            Abort
           </button>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="separator"></div>
+  <!-- ── Right: Controls + Log ─────────────── -->
+  <div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-body">
+        <div class="card-title">Movement Control</div>
+        <div class="card-desc">Manual drive — each press moves for 0.3s. Disabled during Part B.</div>
 
-      <div class="control-section">
+        <div class="section-label">Direction</div>
+        <div class="btn-row" style="margin-bottom:8px">
+          <button class="btn-dir motor-btn" data-cmd="forward" title="Forward">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m5 12 7-7 7 7"/></svg>
+          </button>
+          <button class="btn-dir motor-btn" data-cmd="backward" title="Backward">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+          </button>
+        </div>
+        <div class="btn-row">
+          <button class="btn-dir motor-btn" data-cmd="left" title="Left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5-7 7 7 7"/></svg>
+          </button>
+          <button class="btn-dir motor-btn" data-cmd="right" title="Right">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 19 7-7-7-7"/></svg>
+          </button>
+        </div>
+
+        <div class="separator"></div>
+
         <div class="section-label">Rotate</div>
         <div class="btn-row">
-          <button class="btn-spin" formaction="spin_left" title="Spin Left">
+          <button class="btn-spin motor-btn" data-cmd="spin_left" title="Spin Left">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            <span class="btn-label">Spin L</span>
           </button>
-          <button class="btn-spin" formaction="spin_right" title="Spin Right">
+          <button class="btn-spin motor-btn" data-cmd="spin_right" title="Spin Right">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-            <span class="btn-label">Spin R</span>
           </button>
         </div>
-      </div>
 
-      <div class="separator"></div>
+        <div class="separator"></div>
 
-      <div class="control-section">
-        <button class="btn-stop" formaction="noop" title="Stop">
+        <button class="btn-stop motor-btn" data-cmd="noop" title="Stop">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="5" y="5" rx="2"/></svg>
           STOP
         </button>
       </div>
+    </div>
 
-    </form>
+    <div class="card">
+      <div class="card-body">
+        <div class="card-title">Detection Log</div>
+        <div class="card-desc">QR codes detected by the camera in real time.</div>
+        <div id="log"></div>
+      </div>
+    </div>
   </div>
-</main>
 
-<footer>
-  MECE4613 Industrial Automation &middot; Columbia University
-</footer>
+</div>
 
+<footer>MECE4613 Industrial Automation &middot; Columbia University</footer>
+
+<script>
+const motorBtns = document.querySelectorAll('.motor-btn');
+const btnStart = document.getElementById('btn-start');
+const btnAbort = document.getElementById('btn-abort');
+const statusBadge = document.getElementById('status-badge');
+const partbInd = document.getElementById('partb-ind');
+const partbMsg = document.getElementById('partb-msg');
+const toast = document.getElementById('toast');
+const log = document.getElementById('log');
+let toastTimer;
+let partbActive = false;
+
+/* ── Motor buttons via fetch (no page reload) ── */
+motorBtns.forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    const cmd = btn.dataset.cmd;
+    fetch('/motor/' + cmd, { method: 'POST' });
+  });
+});
+
+/* ── Part B controls ── */
+function startPartB() {
+  fetch('/partb/start', { method: 'POST' }).then(r => {
+    if (r.ok) setPartBUI(true);
+  });
+}
+function stopPartB() {
+  fetch('/partb/stop', { method: 'POST' }).then(r => {
+    if (r.ok) setPartBUI(false);
+  });
+}
+function setPartBUI(running) {
+  partbActive = running;
+  btnStart.disabled = running;
+  btnAbort.disabled = !running;
+  motorBtns.forEach(b => b.disabled = running);
+  statusBadge.className = 'badge ' + (running ? 'badge-running' : 'badge-online');
+  statusBadge.textContent = running ? 'Part B Running' : 'Online';
+}
+
+/* ── SSE ── */
+const evtSource = new EventSource('/events');
+evtSource.onmessage = function(e) {
+  const d = JSON.parse(e.data);
+
+  if (d.type === 'qr') {
+    const cls = d.mine ? 'match' : 'skip';
+    const label = d.mine ? 'Match' : 'Skip';
+    /* toast */
+    toast.className = 'show ' + cls;
+    toast.textContent = d.mine
+      ? '\u2705  Detected ' + d.data + '!'
+      : '\u26A0  Saw ' + d.data + ' (not mine)';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.className = '', 3500);
+    /* log */
+    const entry = document.createElement('div');
+    entry.className = 'log-entry ' + cls;
+    entry.innerHTML =
+      '<span class="lbl">' + label + '</span>' +
+      '<span class="code">' + d.data + '</span>' +
+      '<span class="ts">' + d.time + '</span>';
+    log.prepend(entry);
+    while (log.children.length > 50) log.removeChild(log.lastChild);
+  }
+
+  if (d.type === 'partb') {
+    partbMsg.textContent = d.msg;
+    partbInd.className = 'indicator ind-' + (d.status || 'idle');
+
+    if (d.status === 'done' || d.status === 'aborted') {
+      setPartBUI(false);
+      partbInd.className = 'indicator ind-idle';
+    }
+  }
+};
+</script>
 </body>
 </html>
