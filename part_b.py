@@ -52,8 +52,9 @@ COOLDOWN         = 2.0      # ignore the same code for this long after a detecti
 # Camera
 WIDTH, HEIGHT, FPS = 640, 480, 30
 
-# LED — connected to Crickit Drive pin 1 (PWM-capable)
-led = ck.drive_1
+# LED — onboard Crickit RGB pixel
+RGB = dict(red=0xFF0000, green=0x00FF00, blue=0x0000FF, off=0x000000)
+BRIGHTNESS = 0.01
 
 
 # ─── Camera ───────────────────────────────────────────────────────────
@@ -78,10 +79,10 @@ def grab_frame(picam2):
 
 # ─── LED ──────────────────────────────────────────────────────────────
 def led_on():
-    led.fraction = 1.0
+    ck.onboard_pixel.fill(RGB['red'])
 
 def led_off():
-    led.fraction = 0.0
+    ck.onboard_pixel.fill(RGB['off'])
 
 
 def blink_led(duration=BLINK_DURATION, interval=BLINK_INTERVAL):
@@ -89,7 +90,7 @@ def blink_led(duration=BLINK_DURATION, interval=BLINK_INTERVAL):
     end = time.time() + duration
     state = True
     while time.time() < end:
-        led.fraction = 1.0 if state else 0.0
+        led_on() if state else led_off()
         state = not state
         time.sleep(interval)
     led_off()
@@ -116,6 +117,8 @@ def stop():
 
 # ─── Main routine ────────────────────────────────────────────────────
 def main():
+    ck.onboard_pixel.brightness = BRIGHTNESS
+
     print('=' * 50)
     print(f'  Part B — Dynamic Object Detection')
     print(f'  Looking for QR code: "{MY_UNI}"')
