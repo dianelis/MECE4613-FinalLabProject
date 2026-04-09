@@ -1,0 +1,82 @@
+part B of the assignment, missing the LED logic, right? double check the code. Based on the .MD instructions of the assignment. You can base the plan of the code if not implemented based on prev logic used:
+
+import time
+from adafruit_crickit import crickit as ck
+
+RGB = dict(red=0xFF0000, green=0x00FF00, blue=0x0000FF, off=0x000000)
+BRIGHTNESS = 0.01
+DELAY = 0.3
+THROTTLE = 0.9
+
+
+def drive_motors(duration):
+    ck.dc_motor_1.throttle = THROTTLE
+    ck.dc_motor_2.throttle = THROTTLE
+    time.sleep(duration)
+    ck.dc_motor_1.throttle = 0
+    ck.dc_motor_2.throttle = 0
+
+
+def main():
+    ck.onboard_pixel.brightness = BRIGHTNESS
+
+    while True:
+        choice = input("\nEnter your choice (1 or 3): ").strip()
+
+        if choice == "1":
+            ck.onboard_pixel.fill(RGB["red"])
+            print("LED changed to red")
+
+            drive_motors(DELAY)
+            print("Motors stopped")
+
+        elif choice == "3":
+            break
+
+        else:
+            print("Invalid input. Please enter 1 or 3.")
+
+    ck.onboard_pixel.fill(RGB["off"])
+    ck.dc_motor_1.throttle = 0
+    ck.dc_motor_2.throttle = 0
+    print("LED and motors off. Goodbye!")
+
+
+if __name__ == "__main__":
+    main()
+
+---
+
+Also, I did the movement to go around instead of going straight, is that an accurate behavior based on the instructions?
+
+---
+
+okay implement the led behavior with onboard crickit rbg pixel like the code I sent
+
+---
+
+PLEASE IMPLEMENT THIS PLAN:
+# Onboard RGB LED Update
+
+## Summary
+- Update Part B to use the Crickit onboard RGB pixel, matching the code you provided.
+- Keep the current Part B movement flow unchanged in this pass; this plan only changes LED behavior.
+
+## Key Changes
+- In [part_b.py](</Users/dianeinsua/Downloads/Spring/Industrial Automation/MECE4613-FinalLabProject/part_b.py>), replace the external `ck.drive_1` LED setup with:
+  - `RGB = dict(red=0xFF0000, green=0x00FF00, blue=0x0000FF, off=0x000000)`
+  - `BRIGHTNESS = 0.01`
+- Set `ck.onboard_pixel.brightness = BRIGHTNESS` during `main()` startup.
+- Change `led_on()` to `ck.onboard_pixel.fill(RGB["red"])`.
+- Change `led_off()` to `ck.onboard_pixel.fill(RGB["off"])`.
+- Keep `blink_led()` timing the same, but have it call `led_on()` / `led_off()` instead of writing `led.fraction`.
+- Keep final cleanup behavior, but make sure it turns the onboard pixel off.
+
+## Test Plan
+- Run `python3 -m py_compile part_b.py` if the local environment has the Crickit dependency available.
+- On the Raspberry Pi, run `python3 part_b.py`, show the matching QR code, and confirm the onboard Crickit RGB pixel blinks red/off for 3 seconds.
+- Confirm the onboard pixel is off after the script exits.
+
+## Assumptions
+- Use red for the detection blink, matching your previous snippet.
+- Do not change the robot’s movement path or return behavior as part of this LED-only update.
