@@ -129,6 +129,27 @@ header .badge {
 .ind-phase2 { background: var(--yellow); animation: pulse 1s infinite; }
 .ind-detected { background: var(--accent); animation: pulse 0.4s infinite; }
 
+.mode-toggle {
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+}
+.mode-chip {
+  flex:1;
+  height:34px;
+  font-size:0.75rem;
+  font-weight:600;
+  border:1px solid var(--border);
+  border-radius:9999px;
+  background:#0f0f12;
+  color:var(--fg-muted);
+}
+.mode-chip.active {
+  background:rgba(37,99,235,0.18);
+  border-color:rgba(37,99,235,0.4);
+  color:#93c5fd;
+}
+
 /* ── Buttons ──────────────────────────────── */
 button {
   font-family: inherit;
@@ -247,10 +268,14 @@ footer {
     <div class="card">
       <div class="card-body">
         <div class="card-title">Part B — Dynamic Object Detection</div>
-        <div class="card-desc">
-          Robot drives forward for {{ TRAVEL_DURATION }}s scanning for QR code
-          <strong>{{ my_uni }}</strong>. On detection: stop, blink LED 3s, resume.
-          Then returns to start.
+        <div class="card-desc" id="partb-desc">
+          Robot spins in circles for {{ TRAVEL_DURATION }}s while scanning for QR code
+          <strong>{{ my_uni }}</strong>. On detection: stop, blink blue onboard LED for 3s, then resume.
+          It only spins in the opposite direction if at least one matching QR was detected.
+        </div>
+        <div class="mode-toggle">
+          <button id="mode-forward" class="mode-chip" type="button" onclick="setMode('forward')">Forward Mode (Spec)</button>
+          <button id="mode-circle" class="mode-chip active" type="button" onclick="setMode('circle')">Circle Mode (Easy Scan)</button>
         </div>
         <div style="display:flex; gap:10px">
           <button class="btn-partb btn-start" id="btn-start" onclick="startPartB()">
@@ -336,6 +361,40 @@ const toast = document.getElementById('toast');
 const log = document.getElementById('log');
 let toastTimer;
 let partbActive = false;
+let partbMode = '{{ partb_mode }}' || 'circle';
+
+const modeForwardBtn = document.getElementById('mode-forward');
+const modeCircleBtn = document.getElementById('mode-circle');
+const partbDesc = document.getElementById('partb-desc');
+
+function updateModeUI() {
+  const isForward = partbMode === 'forward';
+  modeForwardBtn.classList.toggle('active', isForward);
+  modeCircleBtn.classList.toggle('active', !isForward);
+  partbDesc.innerHTML = isForward
+    ? 'Robot drives forward for {{ TRAVEL_DURATION }}s scanning for QR code <strong>{{ my_uni }}</strong>. On detection: stop, blink blue onboard LED for 3s, then resume. It only moves backward to return if at least one matching QR was detected.'
+    : 'Robot spins in circles for {{ TRAVEL_DURATION }}s while scanning for QR code <strong>{{ my_uni }}</strong>. On detection: stop, blink blue onboard LED for 3s, then resume. It only spins in the opposite direction if at least one matching QR was detected.';
+}
+
+function setMode(mode) {
+  if (partbActive) return;
+  const selected = mode === 'forward' ? 'forward' : 'circle';
+  fetch('/partb/mode?mode=' + encodeURIComponent(selected), { method: 'POST' })
+    .then(r => r.ok ? r.text() : Promise.reject(r.status))
+    .then(serverMode => {
+      partbMode = (serverMode || selected).trim();
+      updateModeUI();
+      partbMsg.textContent = partbMode === 'forward'
+        ? 'Mode set: Forward (spec). Press Start when ready.'
+        : 'Mode set: Circle (easy scan). Press Start when ready.';
+      partbInd.className = 'indicator ind-idle';
+    })
+    .catch(() => {
+      partbMsg.textContent = 'Failed to set mode. Try again.';
+    });
+}
+
+updateModeUI();
 
 /* ── Motor buttons via fetch (no page reload) ── */
 motorBtns.forEach(btn => {
@@ -348,7 +407,7 @@ motorBtns.forEach(btn => {
 
 /* ── Part B controls ── */
 function startPartB() {
-  fetch('/partb/start', { method: 'POST' }).then(r => {
+  fetch('/partb/start?mode=' + encodeURIComponent(partbMode), { method: 'POST' }).then(r => {
     if (r.ok) setPartBUI(true);
   });
 }
@@ -364,6 +423,8 @@ function setPartBUI(running) {
   motorBtns.forEach(b => b.disabled = running);
   statusBadge.className = 'badge ' + (running ? 'badge-running' : 'badge-online');
   statusBadge.textContent = running ? 'Part B Running' : 'Online';
+  modeForwardBtn.disabled = running;
+  modeCircleBtn.disabled = running;
 }
 
 /* ── SSE ── */

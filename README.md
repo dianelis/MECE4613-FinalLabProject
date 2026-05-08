@@ -8,7 +8,7 @@ The system combines three robot capabilities:
 
 - A browser-based HMI for manual wheel control: forward, backward, left, right, spin left, spin right, and stop.
 - A live camera stream served over HTTP so the operator can see the robot view remotely.
-- QR-code detection with OpenCV. In Part B, the robot scans for a configured UNI QR code, stops when it sees a match, blinks an LED for 3 seconds, resumes travel, and then returns to its starting station.
+- QR-code detection with OpenCV. In Part B, the robot scans for a configured UNI QR code, stops when it sees a match, blinks the onboard LED for 3 seconds, resumes travel, and only runs the return/opposite-direction phase if a match was found.
 
 ## Architecture
 
@@ -101,6 +101,7 @@ The combined Tornado app in `robot/web_app.py` exposes:
 - `/motor/<command>` for manual motor commands
 - `/partb/start` to start the autonomous QR routine
 - `/partb/stop` to abort the autonomous QR routine
+- `/partb/mode` to switch between forward-spec mode and circle-scan mode before a run
 
 ## QR Codes
 

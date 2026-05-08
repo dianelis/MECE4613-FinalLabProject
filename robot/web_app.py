@@ -37,10 +37,12 @@ TEMPLATE_PATH = Path(__file__).resolve().parent / 'templates'
 
 TRAVEL_DURATION = 15
 MOVE_SPEED = 2
+# MOVE_SPEED = 1  # Slowest non-zero speed level (testing only).
 SCAN_INTERVAL = 0.05
 BLINK_DURATION = 3.0
 BLINK_INTERVAL = 0.25
 COOLDOWN = 2.0
+PARTB_MODES = {"forward", "circle"}
 
 # ── Shared state ─────────────────────────────────────────────────────
 _lock = threading.Lock()
@@ -50,8 +52,12 @@ _sse_queues = []
 _partb_thread = None
 _partb_running = False
 _partb_status = "idle"
+_partb_mode = "circle"
 
-led = ck.drive_1
+onboard_pixel = ck.onboard_pixel
+onboard_pixel.brightness = 0.4
+BLUE = (0, 0, 255)
+OFF = (0, 0, 0)
 
 
 def push_event(event_type, data):
@@ -102,13 +108,21 @@ def camera_loop():
 
 
 # ── Part B logic ─────────────────────────────────────────────────────
-def partb_drive_forward():
-    motor.set_throttle('R', MOVE_SPEED, 1)
-    motor.set_throttle('L', MOVE_SPEED, -1)
+def partb_drive_forward(mode):
+    if mode == "forward":
+        motor.set_throttle('R', MOVE_SPEED, 1)
+        motor.set_throttle('L', MOVE_SPEED, 1)
+    else:
+        motor.set_throttle('R', MOVE_SPEED, 1)
+        motor.set_throttle('L', MOVE_SPEED, -1)
 
-def partb_drive_backward():
-    motor.set_throttle('R', MOVE_SPEED, -1)
-    motor.set_throttle('L', MOVE_SPEED, 1)
+def partb_drive_backward(mode):
+    if mode == "forward":
+        motor.set_throttle('R', MOVE_SPEED, -1)
+        motor.set_throttle('L', MOVE_SPEED, -1)
+    else:
+        motor.set_throttle('R', MOVE_SPEED, -1)
+        motor.set_throttle('L', MOVE_SPEED, 1)
 
 def partb_stop_motors():
     motor.set_throttle('R', 0)
@@ -118,13 +132,13 @@ def blink_led():
     end = time.time() + BLINK_DURATION
     state = True
     while time.time() < end:
-        led.fraction = 1.0 if state else 0.0
+        onboard_pixel.fill(BLUE if state else OFF)
         state = not state
         time.sleep(BLINK_INTERVAL)
-    led.fraction = 0.0
+    onboard_pixel.fill(OFF)
 
-def partb_worker():
-    global _partb_running, _partb_status
+def partb_worker(mode):
+    global _partb_running, _partb_status, _partb_mode
 
     detections = 0
     forward_time = 0.0
@@ -132,9 +146,13 @@ def partb_worker():
 
     # Phase 1: forward + scan
     _partb_status = "phase1"
-    push_event("partb", {"status": "phase1", "msg": "Spinning — scanning for QR codes…"})
+    if mode == "forward":
+        phase1_msg = "Moving forward — scanning for QR codes…"
+    else:
+        phase1_msg = "Spinning in circles — scanning for QR codes…"
+    push_event("partb", {"status": "phase1", "mode": mode, "msg": phase1_msg})
     run_start = time.time()
-    partb_drive_forward()
+    partb_drive_forward(mode)
 
     while _partb_running:
         elapsed = time.time() - run_start
@@ -163,8 +181,9 @@ def partb_worker():
                 last_det = time.time()
                 if _partb_running:
                     _partb_status = "phase1"
-                    push_event("partb", {"status": "phase1", "msg": "Resuming spin…"})
-                    partb_drive_forward()
+                    resume_msg = "Resuming forward…" if mode == "forward" else "Resuming circle scan…"
+                    push_event("partb", {"status": "phase1", "mode": mode, "msg": resume_msg})
+                    partb_drive_forward(mode)
 
             elif data and data != MY_UNI:
                 push_event("qr", {
@@ -179,24 +198,36 @@ def partb_worker():
 
     if not _partb_running:
         _partb_status = "idle"
-        push_event("partb", {"status": "aborted", "msg": "Part B aborted.", "detections": detections})
-        led.fraction = 0.0
+        push_event("partb", {"status": "aborted", "mode": mode, "msg": "Part B aborted.", "detections": detections})
+        onboard_pixel.fill(OFF)
         return
 
-    # Phase 2: return
-    _partb_status = "phase2"
-    push_event("partb", {"status": "phase2", "msg": f"Spinning back ({forward_time:.1f}s reverse)…"})
-    partb_drive_backward()
-    t0 = time.time()
-    while _partb_running and (time.time() - t0) < forward_time:
-        time.sleep(0.05)
-    partb_stop_motors()
+    # Phase 2: return only if we actually detected our QR at least once
+    if detections > 0:
+        _partb_status = "phase2"
+        if mode == "forward":
+            phase2_msg = f"Returning to start ({forward_time:.1f}s backward)…"
+        else:
+            phase2_msg = f"Spinning opposite direction ({forward_time:.1f}s)…"
+        push_event("partb", {"status": "phase2", "mode": mode, "msg": phase2_msg})
+        partb_drive_backward(mode)
+        t0 = time.time()
+        while _partb_running and (time.time() - t0) < forward_time:
+            time.sleep(0.05)
+        partb_stop_motors()
+    else:
+        push_event("partb", {
+            "status": "phase2",
+            "mode": mode,
+            "msg": "No matching QR detected — stopping without reverse return.",
+            "detections": detections,
+        })
 
     # Done
     _partb_status = "idle"
     _partb_running = False
-    led.fraction = 0.0
-    push_event("partb", {"status": "done", "msg": f"Part B complete — {detections} detection(s).", "detections": detections})
+    onboard_pixel.fill(OFF)
+    push_event("partb", {"status": "done", "mode": mode, "msg": f"Part B complete — {detections} detection(s).", "detections": detections})
 
 
 # ── Handlers ─────────────────────────────────────────────────────────
@@ -204,7 +235,7 @@ class IndexHandler(RequestHandler):
     def get(self, name=''):
         stamp = datetime.now().isoformat()
         self.render('hmi.html', stamp=stamp, my_uni=MY_UNI,
-                    TRAVEL_DURATION=TRAVEL_DURATION)
+                    TRAVEL_DURATION=TRAVEL_DURATION, partb_mode=_partb_mode)
 
 
 class MotorHandler(RequestHandler):
@@ -260,15 +291,33 @@ class EventHandler(RequestHandler):
                     _sse_queues.remove(q)
 
 
+class PartBModeHandler(RequestHandler):
+    def post(self):
+        global _partb_mode
+        if _partb_running:
+            self.set_status(409)
+            self.write('Cannot change mode while Part B is running')
+            return
+        mode = (self.get_argument("mode", _partb_mode) or _partb_mode).strip().lower()
+        if mode not in PARTB_MODES:
+            mode = "circle"
+        _partb_mode = mode
+        self.write(mode)
+
+
 class PartBStartHandler(RequestHandler):
     def post(self):
-        global _partb_thread, _partb_running
+        global _partb_thread, _partb_running, _partb_mode
         if _partb_running:
             self.set_status(409)
             self.write('Already running')
             return
+        mode = (self.get_argument("mode", "circle") or "circle").strip().lower()
+        if mode not in PARTB_MODES:
+            mode = "circle"
+        _partb_mode = mode
         _partb_running = True
-        _partb_thread = threading.Thread(target=partb_worker, daemon=True)
+        _partb_thread = threading.Thread(target=partb_worker, args=(mode,), daemon=True)
         _partb_thread.start()
         self.write('started')
 
@@ -278,7 +327,7 @@ class PartBStopHandler(RequestHandler):
         global _partb_running
         _partb_running = False
         partb_stop_motors()
-        led.fraction = 0.0
+        onboard_pixel.fill(OFF)
         self.write('stopped')
 
 
@@ -287,6 +336,7 @@ def make_app():
     return Application([
         (r'/stream', StreamHandler),
         (r'/events', EventHandler),
+        (r'/partb/mode', PartBModeHandler),
         (r'/partb/start', PartBStartHandler),
         (r'/partb/stop', PartBStopHandler),
         (r'/motor/([a-z_]+)', MotorHandler),
