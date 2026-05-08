@@ -16,19 +16,19 @@ at every one of them. QR codes belonging to other students are ignored.
 After reaching the end of the run, the robot returns to its starting
 station by reversing for the same distance it traveled forward.
 
-Usage (on the Raspberry Pi):
-    $ python3 part_b.py
+Usage (on the Raspberry Pi, from the repository root):
+    $ python3 -m robot.part_b
 
     You can override your UNI at runtime:
-    $ MY_UNI=xx1234 python3 part_b.py
+    $ MY_UNI=xx1234 python3 -m robot.part_b
 """
 
 
 # ─── Imports ──────────────────────────────────────────────────────────
 from adafruit_crickit import crickit as ck
 from picamera2 import Picamera2
-from qr_code import decode_qrcode
-import motor
+from robot.qr import decode_qrcode
+from robot import motor
 import cv2
 import time
 import os
@@ -36,7 +36,7 @@ import os
 
 # ─── Configuration ────────────────────────────────────────────────────
 # Your University ID — the QR code data the robot should react to.
-# Override via environment variable: MY_UNI=xx1234 python3 part_b.py
+# Override via environment variable: MY_UNI=xx1234 python3 -m robot.part_b
 MY_UNI = os.environ.get('MY_UNI', 'di2256')
 
 # Travel

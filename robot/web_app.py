@@ -17,13 +17,13 @@ from tornado.web import RequestHandler, Application
 from tornado.log import enable_pretty_logging
 from picamera2 import Picamera2
 from adafruit_crickit import crickit as ck
-from qr_code import decode_qrcode
+from robot.qr import decode_qrcode
 from datetime import datetime
-import tornado.web
 import asyncio
 import threading
 import json
-import motor
+from pathlib import Path
+from robot import motor
 import cv2
 import time
 import os
@@ -33,6 +33,7 @@ PORT = 8888
 WIDTH, HEIGHT = 640, 480
 MY_UNI = os.environ.get('MY_UNI', 'di2256')
 DEBUG = bool(os.environ.get('ROBOT_DEBUG'))
+TEMPLATE_PATH = Path(__file__).resolve().parent / 'templates'
 
 TRAVEL_DURATION = 15
 MOVE_SPEED = 2
@@ -281,22 +282,29 @@ class PartBStopHandler(RequestHandler):
         self.write('stopped')
 
 
-# ── Main ─────────────────────────────────────────────────────────────
-enable_pretty_logging()
+def make_app():
+    settings = dict(debug=DEBUG, template_path=str(TEMPLATE_PATH))
+    return Application([
+        (r'/stream', StreamHandler),
+        (r'/events', EventHandler),
+        (r'/partb/start', PartBStartHandler),
+        (r'/partb/stop', PartBStopHandler),
+        (r'/motor/([a-z_]+)', MotorHandler),
+        (r'/([a-z_]*)', IndexHandler),
+    ], **settings)
 
-cam_thread = threading.Thread(target=camera_loop, daemon=True)
-cam_thread.start()
 
-settings = dict(debug=DEBUG)
-app = Application([
-    (r'/stream', StreamHandler),
-    (r'/events', EventHandler),
-    (r'/partb/start', PartBStartHandler),
-    (r'/partb/stop', PartBStopHandler),
-    (r'/motor/([a-z_]+)', MotorHandler),
-    (r'/([a-z_]*)', IndexHandler),
-], **settings)
+def main():
+    enable_pretty_logging()
 
-app.listen(PORT)
-print(f'HMI server running at http://0.0.0.0:{PORT}', flush=True)
-IOLoop.current().start()
+    cam_thread = threading.Thread(target=camera_loop, daemon=True)
+    cam_thread.start()
+
+    app = make_app()
+    app.listen(PORT)
+    print(f'HMI server running at http://0.0.0.0:{PORT}', flush=True)
+    IOLoop.current().start()
+
+
+if __name__ == '__main__':
+    main()

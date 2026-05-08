@@ -2,7 +2,12 @@
 import os
 import asyncio
 import tornado.web
-from file_watcher import FileWatcher
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from robot.file_watcher import FileWatcher
  
 
 # Hyper params

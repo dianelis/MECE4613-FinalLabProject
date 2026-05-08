@@ -9,8 +9,13 @@ Endpoints:
     /events     — Server-Sent Events for QR detections
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from picamera2 import Picamera2
-from qr_code import decode_qrcode
+from robot.qr import decode_qrcode
 import tornado.web
 import tornado.ioloop
 import asyncio

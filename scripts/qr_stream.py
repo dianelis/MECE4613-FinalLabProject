@@ -1,8 +1,14 @@
 
 import os
+import sys
+from pathlib import Path
+
 import cv2
-from qr_code import draw, decode_qrcode
-from file_watcher import FileWatcher
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from robot.qr import decode_qrcode
+from robot.file_watcher import FileWatcher
 decoder = cv2.QRCodeDetector()
 
 

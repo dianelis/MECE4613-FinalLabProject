@@ -1,7 +1,13 @@
 
 import os
+import sys
+from pathlib import Path
+
 import cv2
-from file_watcher import FileWatcher
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from robot.file_watcher import FileWatcher
 
 
 # Define hyper parameters

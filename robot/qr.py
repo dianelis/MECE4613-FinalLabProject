@@ -1,8 +1,10 @@
+from pathlib import Path
+
 import cv2
 
 
 # Hyper params
-code = 'am3469.png'
+code = Path(__file__).resolve().parents[1] / 'assets' / 'qr' / 'am3469.png'
 BLUE = (255, 0, 0)
 FONT = cv2.FONT_HERSHEY_TRIPLEX
 detector = cv2.QRCodeDetector()
@@ -31,7 +33,7 @@ def draw(frame, points, color, thickness):
 
 
 def main():
-    frame = cv2.imread(code)
+    frame = cv2.imread(str(code))
     decoded_data = decode_qrcode(frame)
     print(f"decoded data: {repr(decoded_data)}")
     cv2.imshow('preview', frame)
@@ -41,4 +43,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
