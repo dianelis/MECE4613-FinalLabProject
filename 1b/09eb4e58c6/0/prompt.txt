@@ -1,5 +1,0 @@
-for portfolio, create a title and description, based on the scripts in which scans the qr code, and has an ui that moves the wheels left right up and down
-
----
-
-restructure project into an architecture that makes sense. redo the commits with descriptive message and repush so they're signed. update readme with updates
