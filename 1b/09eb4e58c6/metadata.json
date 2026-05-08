@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.5.2",
+  "checkpoint_id": "1b09eb4e58c6",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "README.md",
+    "robot/__init__.py",
+    "robot/part_b.py",
+    "robot/qr.py",
+    "robot/web_app.py",
+    "scripts/camera_capture.py",
+    "scripts/camera_stream.py",
+    "scripts/camera_web.py",
+    "scripts/hmi_server.py",
+    "scripts/hmi_stream.py",
+    "scripts/qr_stream.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/1b/09eb4e58c6/0/metadata.json",
+      "transcript": "/1b/09eb4e58c6/0/full.jsonl",
+      "content_hash": "/1b/09eb4e58c6/0/content_hash.txt",
+      "prompt": "/1b/09eb4e58c6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1242549,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1156352,
+    "output_tokens": 11997,
+    "api_call_count": 35
+  }
+}
